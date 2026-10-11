@@ -1,0 +1,1039 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<meta name="theme-color" content="#07130f">
+<title>Alix Cycle World V6</title>
+
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+
+<style>
+:root {
+  --bg:#07130f;
+  --panel:#10221a;
+  --panel2:#172d22;
+  --green:#35e889;
+  --green2:#18b968;
+  --text:#f2fff7;
+  --muted:#9bb7a7;
+  --border:#294638;
+  --red:#ff6262;
+  --yellow:#ffd166;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{
+  margin:0;background:var(--bg);color:var(--text);
+  font-family:Arial,Helvetica,sans-serif;
+  padding-bottom:94px;
+}
+button,input,select,textarea{font:inherit}
+button{cursor:pointer}
+header{
+  padding:17px 16px 12px;
+  background:linear-gradient(135deg,#102b1e,#07130f);
+  border-bottom:1px solid var(--border);
+}
+.brand{font-size:22px;font-weight:900;letter-spacing:.3px}
+.brand span{color:var(--green)}
+.subtitle{color:var(--muted);font-size:12px;margin-top:5px}
+.status-row{
+  display:flex;align-items:center;gap:8px;margin-top:12px;
+  font-size:12px;color:var(--muted)
+}
+.dot{
+  width:9px;height:9px;border-radius:50%;
+  background:var(--yellow);display:inline-block;flex-shrink:0
+}
+.dot.good{background:var(--green)}
+.dot.bad{background:var(--red)}
+main{max-width:950px;margin:auto;padding:12px}
+.page{display:none}
+.page.active{display:block}
+.card{
+  background:var(--panel);border:1px solid var(--border);
+  border-radius:17px;padding:15px;margin-bottom:13px;
+  min-width:0;
+}
+.card-title{
+  font-size:16px;font-weight:800;margin:0 0 12px;
+  display:flex;justify-content:space-between;align-items:center;gap:8px
+}
+.muted{color:var(--muted);font-size:12px;line-height:1.5}
+.small{font-size:11px;color:var(--muted)}
+.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.grid3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.stat{
+  background:var(--panel2);padding:13px;border-radius:13px;
+  border:1px solid var(--border);min-width:0
+}
+.stat-value{font-size:21px;font-weight:900;color:var(--green);overflow-wrap:anywhere}
+.stat-label{font-size:11px;color:var(--muted);margin-top:5px}
+.btn{
+  background:var(--green);color:#062014;border:0;border-radius:11px;
+  padding:11px 13px;font-weight:800;min-height:42px;
+}
+.btn:active{transform:scale(.98)}
+.btn.secondary{
+  background:var(--panel2);color:var(--text);
+  border:1px solid var(--border)
+}
+.btn.danger{background:#632c2c;color:#fff}
+.btn.warning{background:var(--yellow);color:#29200a}
+.btn.full{width:100%}
+.btn-row{display:flex;flex-wrap:wrap;gap:8px}
+input,select,textarea{
+  background:#091911;color:var(--text);
+  border:1px solid var(--border);border-radius:10px;
+  padding:12px;width:100%;min-width:0;outline:none
+}
+input:focus,select:focus,textarea:focus{border-color:var(--green)}
+textarea{resize:vertical;min-height:100px}
+.field{margin:10px 0}
+.field label{display:block;font-size:12px;color:var(--muted);margin-bottom:6px}
+hr{border:0;border-top:1px solid var(--border);margin:14px 0}
+.notice{
+  background:#152b20;border-left:3px solid var(--green);
+  padding:11px;border-radius:7px;font-size:12px;
+  line-height:1.5;color:#d7f5e3
+}
+.item{
+  padding:12px 0;border-bottom:1px solid var(--border)
+}
+.item:last-child{border-bottom:0}
+.item-title{font-weight:800;margin-bottom:5px}
+.badge{
+  display:inline-block;padding:6px 9px;border-radius:8px;
+  background:var(--panel2);border:1px solid var(--border);
+  color:var(--green);font-size:11px;margin:3px
+}
+.checkrow{
+  display:flex;align-items:flex-start;gap:10px;
+  padding:11px 0;border-bottom:1px solid var(--border);
+  font-size:13px;line-height:1.4
+}
+.checkrow input{width:19px;height:19px;flex-shrink:0;accent-color:var(--green)}
+/* MAP + RIDE SHARE THE SAME CONTAINER */
+.combined-shell{
+  padding:0;overflow:hidden;border-radius:18px;
+}
+.combined-head{padding:15px 15px 12px}
+.combined-head .card-title{margin-bottom:6px}
+.map-toolbar{display:flex;gap:7px;flex-wrap:wrap;margin-top:12px}
+.map-toolbar .btn{flex:1}
+#map{
+  height:56vh;min-height:340px;max-height:620px;
+  width:100%;background:#16251d;z-index:1;
+  transition:height .2s ease;
+}
+#map.map-expanded{
+  height:78vh;min-height:450px;max-height:none;
+}
+.map-footer{padding:12px 14px;background:#0b1a12}
+.map-footer .small{line-height:1.7}
+.ride-area{
+  border-top:1px solid var(--border);
+  padding:15px;background:linear-gradient(180deg,#11271b,#0b1911)
+}
+.ride-area h3{margin:0 0 12px;font-size:17px}
+.ride-controls{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+.ride-controls .btn{flex:1;min-width:100px}
+.ride-state{font-size:12px;color:var(--muted);margin-top:10px}
+.bottom-nav{
+  position:fixed;bottom:0;left:0;right:0;z-index:999;
+  display:flex;overflow-x:auto;gap:3px;
+  padding:8px 5px calc(8px + env(safe-area-inset-bottom));
+  background:rgba(5,17,11,.97);border-top:1px solid var(--border);
+  scrollbar-width:none;backdrop-filter:blur(12px)
+}
+.bottom-nav::-webkit-scrollbar{display:none}
+.nav-btn{
+  flex:0 0 67px;min-height:55px;background:transparent;
+  color:var(--muted);border:0;border-radius:10px;
+  font-size:10px;font-weight:700;padding:5px 3px;
+  display:flex;flex-direction:column;align-items:center;
+  justify-content:center;gap:4px
+}
+.nav-btn .icon{font-size:19px}
+.nav-btn.active{background:#183a27;color:var(--green)}
+.contact-actions{display:flex;gap:7px;flex-wrap:wrap;margin-top:9px}
+.contact-actions .btn{flex:1}
+.locked-value{letter-spacing:2px;color:var(--muted)}
+footer{text-align:center;padding:20px 10px;color:var(--muted);font-size:12px}
+a{color:var(--green)}
+.leaflet-popup-content-wrapper,.leaflet-popup-tip{background:#10221a;color:white}
+.leaflet-popup-content{font-size:12px}
+@media(min-width:650px){
+  main{padding:20px}
+  #map{height:62vh}
+  .grid{grid-template-columns:repeat(4,minmax(0,1fr))}
+}
+</style>
+</head>
+
+<body>
+<header>
+  <div class="brand">🚴 ALIX <span>CYCLE WORLD</span></div>
+  <div class="subtitle">V6 · Your cycling companion</div>
+  <div class="status-row">
+    <span class="dot" id="gpsDot"></span>
+    <span id="gpsStatus">Starting automatic GPS…</span>
+  </div>
+</header>
+
+<main>
+<!-- HOME -->
+<section class="page active" id="page-home">
+  <div class="card">
+    <h2 style="margin:0 0 8px">Ready to Ride?</h2>
+    <p class="muted">Track your cycling activity, check your bike, and plan your route.</p>
+    <div class="grid">
+      <div class="stat"><div class="stat-value" id="homeDistance">0.00 km</div><div class="stat-label">Current Ride</div></div>
+      <div class="stat"><div class="stat-value" id="homeSpeed">0.0 km/h</div><div class="stat-label">Current Speed</div></div>
+      <div class="stat"><div class="stat-value" id="homeWeather">--°</div><div class="stat-label">Temperature</div></div>
+      <div class="stat"><div class="stat-value" id="homeRides">0</div><div class="stat-label">Completed Rides</div></div>
+    </div>
+    <div class="btn-row" style="margin-top:14px">
+      <button class="btn" onclick="openPage('map')">🗺️ Open Map + Ride</button>
+      <button class="btn secondary" onclick="openPage('safety')">🛡️ Bike Safety</button>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3 class="card-title">📍 Cyclist Location</h3>
+    <div id="homeCoordinates" class="muted">Waiting for GPS permission…</div>
+    <div class="small" id="locationUpdated" style="margin-top:8px">Waiting for first location update</div>
+    <p class="muted">Location updates automatically while your browser and device allow GPS access.</p>
+  </div>
+
+  <div class="card">
+    <h3 class="card-title">🌦️ Current Weather</h3>
+    <div id="homeWeatherDetails" class="muted">Waiting for location…</div>
+    <button class="btn secondary full" onclick="openPage('weather')" style="margin-top:12px">View Weather Details</button>
+  </div>
+
+  <div class="card">
+    <h3 class="card-title">Quick Checklist</h3>
+    <div id="homeChecklist" class="muted">Check your tires, brakes, lights, and helmet before riding.</div>
+    <button class="btn secondary full" onclick="openPage('safety')" style="margin-top:10px">Open Safety Checklist</button>
+  </div>
+</section>
+
+<!-- MAP AND RIDE: ONE SHARED CONTAINER -->
+<section class="page" id="page-map">
+  <div class="card combined-shell">
+    <div class="combined-head">
+      <h2 class="card-title">🗺️ Map + 🚴 Ride</h2>
+      <div class="muted">Your live cyclist location, destination route, and ride tracker are together here.</div>
+
+      <div class="map-toolbar">
+        <button class="btn secondary" onclick="toggleMapSize()" id="expandMapBtn">⛶ Enlarge Map</button>
+        <button class="btn secondary" onclick="centerOnCyclist()">📍 Center Cyclist</button>
+        <button class="btn secondary" onclick="toggleMapLayer()" id="layerBtn">🛰️ Satellite</button>
+      </div>
+
+      <div class="field">
+        <label for="destinationInput">Destination</label>
+        <input id="destinationInput" placeholder="Enter place or destination…">
+      </div>
+      <button class="btn full" onclick="findRoute()">🧭 Find Route</button>
+      <div id="routeInfo" class="muted" style="margin-top:10px">Search for a destination to see route distance and estimated time.</div>
+    </div>
+
+    <div id="map"></div>
+    <div class="map-footer">
+      <div class="small" id="mapLocationStatus">Waiting for automatic GPS location…</div>
+      <div class="small">Map data © OpenStreetMap contributors · Satellite imagery © Esri</div>
+    </div>
+
+    <!-- Ride controls stay INSIDE the same Map container -->
+    <div class="ride-area" id="rideControls">
+      <h3>🚴 Ride Tracker</h3>
+      <div class="grid">
+        <div class="stat"><div class="stat-value" id="rideDistance">0.00 km</div><div class="stat-label">Distance</div></div>
+        <div class="stat"><div class="stat-value" id="rideDuration">00:00</div><div class="stat-label">Ride Time</div></div>
+        <div class="stat"><div class="stat-value" id="rideSpeed">0.0 km/h</div><div class="stat-label">Current Speed</div></div>
+        <div class="stat"><div class="stat-value" id="rideAverage">0.0 km/h</div><div class="stat-label">Average Speed</div></div>
+      </div>
+      <div class="ride-controls">
+        <button class="btn" id="startRideBtn" onclick="startRide()">▶ Start Ride</button>
+        <button class="btn warning" id="pauseRideBtn" onclick="togglePauseRide()" disabled>Ⅱ Pause</button>
+        <button class="btn danger" onclick="finishRide()">■ Finish</button>
+      </div>
+      <div class="ride-state" id="rideState">Ride not started.</div>
+      <p class="small">Keep your phone secured while cycling. Do not operate the app while riding.</p>
+    </div>
+  </div>
+</section>
+
+<!-- WEATHER -->
+<section class="page" id="page-weather">
+  <div class="card">
+    <h2 class="card-title">🌦️ Weather</h2>
+    <div class="field">
+      <label>Search city or town</label>
+      <input id="weatherCityInput" placeholder="e.g. Polomolok, Philippines">
+    </div>
+    <button class="btn full" onclick="searchWeatherCity()">Search Weather</button>
+    <hr>
+    <div id="weatherMain" class="muted">Waiting for weather data…</div>
+  </div>
+  <div class="card">
+    <h3 class="card-title">Cycling Conditions</h3>
+    <div id="weatherAdvice" class="muted">Weather advice will appear here.</div>
+  </div>
+</section>
+
+<!-- HISTORY -->
+<section class="page" id="page-history">
+  <div class="card">
+    <h2 class="card-title">📊 Ride History</h2>
+    <div id="historySummary" class="muted"></div>
+    <div id="historyList"></div>
+    <button class="btn danger full" onclick="clearHistory()">Clear Ride History</button>
+  </div>
+</section>
+
+<!-- BADGES -->
+<section class="page" id="page-badges">
+  <div class="card">
+    <h2 class="card-title">🏆 Cycling Badges</h2>
+    <p class="muted">Badges are based on completed rides saved on this device.</p>
+    <div id="badgeList"></div>
+  </div>
+</section>
+
+<!-- NEARBY -->
+<section class="page" id="page-nearby">
+  <div class="card">
+    <h2 class="card-title">🛠️ Nearby Bike Shops</h2>
+    <p class="muted">Search for bicycle shops near your current GPS location.</p>
+    <button class="btn full" onclick="findNearbyShops()">Find Nearby Shops</button>
+    <div id="nearbyList" style="margin-top:12px" class="muted">Tap the button to search.</div>
+  </div>
+</section>
+
+<!-- SAFETY -->
+<section class="page" id="page-safety">
+  <div class="card">
+    <h2 class="card-title">🛡️ Bike Safety Checklist</h2>
+    <p class="muted">Check your bicycle before every ride. Your selections are saved on this device.</p>
+    <div id="safetyList"></div>
+    <div class="grid" style="margin-top:14px">
+      <div class="stat"><div class="stat-value" id="safetyCount">0/0</div><div class="stat-label">Items Checked</div></div>
+      <div class="stat"><div class="stat-value" id="safetyPercent">0%</div><div class="stat-label">Checklist Complete</div></div>
+    </div>
+    <button class="btn secondary full" onclick="resetSafety()" style="margin-top:12px">Reset Checklist</button>
+  </div>
+  <div class="card">
+    <h3 class="card-title">🚨 Ride Safely</h3>
+    <ul class="muted" style="padding-left:20px;line-height:1.9">
+      <li>Wear a properly fitted helmet.</li>
+      <li>Inspect tire pressure and tire condition.</li>
+      <li>Test both brakes before departure.</li>
+      <li>Use lights and reflective clothing when needed.</li>
+      <li>Follow traffic rules and remain aware of vehicles.</li>
+      <li>Do not use your phone while moving.</li>
+    </ul>
+    <button class="btn secondary full" onclick="openPage('contacts')">Manage Emergency Contacts</button>
+  </div>
+</section>
+
+<!-- CONTACTS -->
+<section class="page" id="page-contacts">
+  <div class="card">
+    <h2 class="card-title">📞 Emergency Contacts</h2>
+    <p class="muted">Contacts are stored in this browser on this device. Saved details are locked from direct editing until you choose Edit.</p>
+    <div class="field"><label>Contact Name</label><input id="contactName" placeholder="Full name"></div>
+    <div class="field"><label>Phone Number</label><input id="contactPhone" type="tel" placeholder="Phone number"></div>
+    <button class="btn full" onclick="addContact()">＋ Add Contact</button>
+    <div id="contactsList" style="margin-top:12px"></div>
+  </div>
+</section>
+
+<!-- SETTINGS -->
+<section class="page" id="page-settings">
+  <div class="card">
+    <h2 class="card-title">⚙️ Settings</h2>
+    <div class="field">
+      <label>Preferred distance unit</label>
+      <select id="unitSetting" onchange="saveSettings()">
+        <option value="km">Kilometers (km)</option>
+        <option value="mi">Miles (mi)</option>
+      </select>
+    </div>
+    <div class="field">
+      <label>Estimated cycling speed (km/h)</label>
+      <input type="number" id="speedSetting" min="5" max="60" value="15" onchange="saveSettings()">
+    </div>
+    <button class="btn full" onclick="saveSettings()">Save Settings</button>
+  </div>
+
+  <div class="card">
+    <h3 class="card-title">👨‍💻 Created By</h3>
+    <div class="item-title">Manolito C. Basalo Jr</div>
+    <div class="muted">Facebook: Manolito Basalo</div>
+  </div>
+
+  <div class="card">
+    <h3 class="card-title">✉️ Feedback</h3>
+    <p class="muted">Send a suggestion, bug report, or feedback about Alix Cycle World.</p>
+    <div class="field"><label>Your name (optional)</label><input id="feedbackName" placeholder="Your name"></div>
+    <div class="field"><label>Feedback</label><textarea id="feedbackMessage" placeholder="Write your feedback here…"></textarea></div>
+    <button class="btn full" onclick="sendFeedback()">Send Feedback by Email</button>
+    <p class="small">This opens your email app. Review and send the email there; this standalone website cannot silently send email.</p>
+  </div>
+
+  <div class="card">
+    <h3 class="card-title">About</h3>
+    <div class="muted">Alix Cycle World V6 · Cycling map, ride tracking, weather, safety checklist, and emergency contacts.</div>
+  </div>
+</section>
+
+<footer>Alix Cycle World V6 · Ride smart. Ride safely.</footer>
+</main>
+
+<nav class="bottom-nav">
+  <button class="nav-btn active" data-page="home" onclick="openPage('home')"><span class="icon">🏠</span>Home</button>
+  <button class="nav-btn" data-page="map" onclick="openPage('map')"><span class="icon">🗺️</span>Map + Ride</button>
+  <button class="nav-btn" data-page="weather" onclick="openPage('weather')"><span class="icon">🌦️</span>Weather</button>
+  <button class="nav-btn" data-page="history" onclick="openPage('history')"><span class="icon">📊</span>History</button>
+  <button class="nav-btn" data-page="badges" onclick="openPage('badges')"><span class="icon">🏆</span>Badges</button>
+  <button class="nav-btn" data-page="nearby" onclick="openPage('nearby')"><span class="icon">🛠️</span>Nearby</button>
+  <button class="nav-btn" data-page="safety" onclick="openPage('safety')"><span class="icon">🛡️</span>Safety</button>
+  <button class="nav-btn" data-page="contacts" onclick="openPage('contacts')"><span class="icon">📞</span>Contacts</button>
+  <button class="nav-btn" data-page="settings" onclick="openPage('settings')"><span class="icon">⚙️</span>Settings</button>
+</nav>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+"use strict";
+
+/* ---------------- STORAGE ---------------- */
+const STORE={
+  history:"alixV6History",
+  contacts:"alixV6Contacts",
+  safety:"alixV6Safety",
+  settings:"alixV6Settings"
+};
+function readStore(key,fallback){
+  try{
+    const value=localStorage.getItem(key);
+    return value===null?fallback:JSON.parse(value);
+  }catch(e){return fallback}
+}
+function writeStore(key,value){
+  try{localStorage.setItem(key,JSON.stringify(value))}
+  catch(e){console.warn("Local storage unavailable",e)}
+}
+let historyData=readStore(STORE.history,[]);
+let contacts=readStore(STORE.contacts,[]);
+let safetyState=readStore(STORE.safety,{});
+let settings=readStore(STORE.settings,{unit:"km",speed:15});
+
+/* ---------------- NAVIGATION ---------------- */
+function openPage(name){
+  document.querySelectorAll(".page").forEach(p=>p.classList.remove("active"));
+  document.querySelectorAll(".nav-btn").forEach(b=>b.classList.toggle("active",b.dataset.page===name));
+  const page=document.getElementById("page-"+name);
+  if(page)page.classList.add("active");
+  window.scrollTo({top:0,behavior:"smooth"});
+
+  if(name==="map"){
+    setTimeout(()=>{
+      initializeMap();
+      if(map)map.invalidateSize();
+      if(currentLocation)updateCyclistOnMap();
+    },120);
+  }
+  if(name==="history")renderHistory();
+  if(name==="badges")renderBadges();
+  if(name==="contacts")renderContacts();
+  if(name==="safety")renderSafety();
+  if(name==="weather")renderWeather();
+}
+
+/* ---------------- MAP ---------------- */
+let map=null,cyclistMarker=null,accuracyCircle=null,routeLine=null;
+let destinationMarker=null,shopMarkers=[];
+let satelliteLayer=null,streetLayer=null,isSatellite=false,mapExpanded=false;
+let currentLocation=null,watchId=null,lastWeatherCoordinates=null;
+let lastWeatherFetch=0,weatherData=null;
+
+function initializeMap(){
+  if(map)return;
+  if(!window.L){
+    document.getElementById("mapLocationStatus").textContent="Map library failed to load. Check your internet connection.";
+    return;
+  }
+  map=L.map("map",{zoomControl:true}).setView([12.8797,121.774],6);
+
+  streetLayer=L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",{
+    maxZoom:19,attribution:"© OpenStreetMap contributors"
+  });
+  satelliteLayer=L.tileLayer(
+    "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",
+    {maxZoom:19,attribution:"Tiles © Esri"}
+  );
+  streetLayer.addTo(map);
+}
+
+function toggleMapSize(){
+  mapExpanded=!mapExpanded;
+  document.getElementById("map").classList.toggle("map-expanded",mapExpanded);
+  document.getElementById("expandMapBtn").textContent=mapExpanded?"⛶ Normal Map":"⛶ Enlarge Map";
+  setTimeout(()=>{if(map)map.invalidateSize()},250);
+}
+function toggleMapLayer(){
+  initializeMap();
+  if(!map)return;
+  if(isSatellite){
+    map.removeLayer(satelliteLayer);
+    streetLayer.addTo(map);
+    document.getElementById("layerBtn").textContent="🛰️ Satellite";
+  }else{
+    map.removeLayer(streetLayer);
+    satelliteLayer.addTo(map);
+    document.getElementById("layerBtn").textContent="🗺️ Street Map";
+  }
+  isSatellite=!isSatellite;
+}
+function centerOnCyclist(){
+  if(!currentLocation){alert("Waiting for GPS location. Please allow location permission.");return}
+  initializeMap();
+  if(map){
+    map.setView([currentLocation.lat,currentLocation.lon],16);
+    updateCyclistOnMap();
+  }
+}
+function updateCyclistOnMap(){
+  if(!map||!currentLocation)return;
+  const p=[currentLocation.lat,currentLocation.lon];
+  if(!cyclistMarker){
+    cyclistMarker=L.marker(p).addTo(map).bindPopup("📍 Your Cyclist Location");
+    accuracyCircle=L.circle(p,{
+      radius:currentLocation.accuracy||20,
+      color:"#35e889",fillColor:"#35e889",fillOpacity:.12
+    }).addTo(map);
+    map.setView(p,16);
+  }else{
+    cyclistMarker.setLatLng(p);
+    accuracyCircle.setLatLng(p);
+    accuracyCircle.setRadius(currentLocation.accuracy||20);
+  }
+  document.getElementById("mapLocationStatus").textContent=
+    "GPS: "+currentLocation.lat.toFixed(6)+", "+currentLocation.lon.toFixed(6)+
+    " · Accuracy ±"+Math.round(currentLocation.accuracy||0)+" m";
+}
+
+/* ---------------- AUTOMATIC GPS ---------------- */
+function startAutomaticLocation(){
+  const status=document.getElementById("gpsStatus");
+  const dot=document.getElementById("gpsDot");
+  if(!("geolocation" in navigator)){
+    status.textContent="GPS is not supported by this browser.";
+    dot.className="dot bad";return;
+  }
+  if(!window.isSecureContext){
+    status.textContent="GPS requires HTTPS or localhost.";
+  }
+  status.textContent="Requesting automatic GPS permission…";
+  watchId=navigator.geolocation.watchPosition(
+    handleLocationSuccess,
+    handleLocationError,
+    {enableHighAccuracy:true,maximumAge:3000,timeout:20000}
+  );
+}
+function handleLocationSuccess(position){
+  const c=position.coords;
+  currentLocation={
+    lat:c.latitude,lon:c.longitude,accuracy:c.accuracy||0,
+    speed:c.speed,timestamp:position.timestamp
+  };
+  document.getElementById("gpsDot").className="dot good";
+  document.getElementById("gpsStatus").textContent=
+    "GPS active · ±"+Math.round(c.accuracy||0)+" m";
+  document.getElementById("homeCoordinates").textContent=
+    c.latitude.toFixed(6)+", "+c.longitude.toFixed(6);
+  document.getElementById("locationUpdated").textContent=
+    "Last update: "+new Date(position.timestamp).toLocaleTimeString();
+  updateCyclistOnMap();
+
+  if(c.speed!==null&&Number.isFinite(c.speed)){
+    ride.currentSpeed=Math.max(0,c.speed*3.6);
+  }
+  processRideGPS(position);
+  updateRideDisplay();
+
+  const movedEnough=!lastWeatherCoordinates||
+    haversine(c.latitude,c.longitude,lastWeatherCoordinates.lat,lastWeatherCoordinates.lon)>2;
+  if(movedEnough&&Date.now()-lastWeatherFetch>60000){
+    loadWeather(c.latitude,c.longitude);
+  }
+}
+function handleLocationError(error){
+  const dot=document.getElementById("gpsDot");
+  dot.className="dot bad";
+  let message="GPS unavailable.";
+  if(error.code===1)message="Location permission denied. Allow location access in browser settings.";
+  if(error.code===2)message="GPS position unavailable. Move to an open area and try again.";
+  if(error.code===3)message="GPS request timed out. Waiting for another update…";
+  document.getElementById("gpsStatus").textContent=message;
+  document.getElementById("mapLocationStatus").textContent=message;
+}
+
+/* ---------------- DISTANCE HELPERS ---------------- */
+function haversine(lat1,lon1,lat2,lon2){
+  const R=6371,toRad=v=>v*Math.PI/180;
+  const dLat=toRad(lat2-lat1),dLon=toRad(lon2-lon1);
+  const a=Math.sin(dLat/2)**2+
+    Math.cos(toRad(lat1))*Math.cos(toRad(lat2))*Math.sin(dLon/2)**2;
+  return R*2*Math.atan2(Math.sqrt(a),Math.sqrt(1-a));
+}
+function formatDistance(km){
+  if(settings.unit==="mi")return (km*0.621371).toFixed(2)+" mi";
+  return km.toFixed(2)+" km";
+}
+
+/* ---------------- DESTINATION ROUTING ---------------- */
+async function findRoute(){
+  const input=document.getElementById("destinationInput").value.trim();
+  if(!input){alert("Please enter a destination.");return}
+  if(!currentLocation){alert("Waiting for GPS location. Allow location permission first.");return}
+  initializeMap();
+  if(!map)return;
+  const info=document.getElementById("routeInfo");
+  info.textContent="Searching for destination…";
+
+  try{
+    const geoURL="https://nominatim.openstreetmap.org/search?format=json&limit=1&q="+encodeURIComponent(input);
+    const geoResponse=await fetch(geoURL);
+    if(!geoResponse.ok)throw new Error("Destination search failed");
+    const places=await geoResponse.json();
+    if(!places.length){info.textContent="Destination not found. Try a more specific place name.";return}
+
+    const dest={lat:Number(places[0].lat),lon:Number(places[0].lon)};
+    const start=currentLocation;
+    const routeURL="https://router.project-osrm.org/route/v1/driving/"+
+      start.lon+","+start.lat+";"+dest.lon+","+dest.lat+
+      "?overview=full&geometries=geojson";
+    info.textContent="Calculating route…";
+    const routeResponse=await fetch(routeURL);
+    if(!routeResponse.ok)throw new Error("Route service unavailable");
+    const result=await routeResponse.json();
+    if(result.code!=="Ok"||!result.routes.length)throw new Error("No route found");
+
+    const r=result.routes[0];
+    if(routeLine)map.removeLayer(routeLine);
+    if(destinationMarker)map.removeLayer(destinationMarker);
+    routeLine=L.geoJSON(r.geometry,{
+      style:{color:"#35e889",weight:6,opacity:.9}
+    }).addTo(map);
+    destinationMarker=L.marker([dest.lat,dest.lon]).addTo(map)
+      .bindPopup("🏁 "+escapeHTML(places[0].display_name));
+    map.fitBounds(routeLine.getBounds(),{padding:[25,25]});
+
+    const km=r.distance/1000;
+    const mins=Math.round(r.duration/60);
+    info.innerHTML="<b>Destination:</b> "+escapeHTML(places[0].display_name)+
+      "<br><b>Route distance:</b> "+formatDistance(km)+
+      "<br><b>Estimated travel time:</b> "+mins+" minutes"+
+      "<br><span class='small'>Driving route estimate; it may not be suitable for bicycles.</span>";
+  }catch(e){
+    info.textContent="Unable to calculate route. Check your internet connection and try again.";
+  }
+}
+
+/* ---------------- WEATHER ---------------- */
+function weatherDescription(code){
+  if(code===0)return "Clear sky";
+  if([1,2,3].includes(code))return "Partly cloudy / cloudy";
+  if([45,48].includes(code))return "Fog";
+  if([51,53,55,56,57].includes(code))return "Drizzle";
+  if([61,63,65,66,67,80,81,82].includes(code))return "Rain";
+  if([71,73,75,77,85,86].includes(code))return "Snow";
+  if([95,96,99].includes(code))return "Thunderstorm";
+  return "Variable conditions";
+}
+async function loadWeather(lat,lon){
+  lastWeatherCoordinates={lat,lon};
+  lastWeatherFetch=Date.now();
+  document.getElementById("homeWeatherDetails").textContent="Loading weather…";
+  try{
+    const url="https://api.open-meteo.com/v1/forecast?latitude="+lat+
+      "&longitude="+lon+
+      "&current=temperature_2m,relative_humidity_2m,apparent_temperature,is_day,precipitation,rain,showers,weather_code,wind_speed_10m,wind_gusts_10m"+
+      "&hourly=precipitation_probability&forecast_days=1&timezone=auto";
+    const res=await fetch(url);
+    if(!res.ok)throw new Error("Weather request failed");
+    weatherData=await res.json();
+    renderWeather();
+  }catch(e){
+    document.getElementById("homeWeatherDetails").textContent="Weather unavailable. Check your internet connection.";
+    document.getElementById("weatherMain").textContent="Weather unavailable.";
+  }
+}
+async function searchWeatherCity(){
+  const city=document.getElementById("weatherCityInput").value.trim();
+  if(!city){alert("Enter a city or town.");return}
+  document.getElementById("weatherMain").textContent="Searching city…";
+  try{
+    const res=await fetch("https://geocoding-api.open-meteo.com/v1/search?name="+encodeURIComponent(city)+"&count=1&language=en&format=json");
+    const data=await res.json();
+    if(!data.results||!data.results.length)throw new Error("City not found");
+    await loadWeather(data.results[0].latitude,data.results[0].longitude);
+  }catch(e){
+    document.getElementById("weatherMain").textContent="City not found or weather service unavailable.";
+  }
+}
+function renderWeather(){
+  if(!weatherData||!weatherData.current)return;
+  const c=weatherData.current;
+  const temp=Math.round(c.temperature_2m);
+  document.getElementById("homeWeather").textContent=temp+"°C";
+  document.getElementById("homeWeatherDetails").textContent=
+    weatherDescription(c.weather_code)+" · "+temp+"°C · Wind "+c.wind_speed_10m+" km/h";
+  document.getElementById("weatherMain").innerHTML=
+    "<div class='grid'>"+
+    statHTML(temp+"°C","Temperature")+
+    statHTML(Math.round(c.apparent_temperature)+"°C","Feels Like")+
+    statHTML(c.relative_humidity_2m+"%","Humidity")+
+    statHTML(c.wind_speed_10m+" km/h","Wind")+
+    statHTML(c.wind_gusts_10m+" km/h","Wind Gusts")+
+    statHTML(c.precipitation+" mm","Precipitation")+
+    "</div><p class='muted' style='margin-top:12px'>"+weatherDescription(c.weather_code)+
+    "<br>Updated: "+new Date(c.time).toLocaleString()+"</p>";
+  let advice="Check traffic and road conditions before you ride.";
+  if(c.weather_code>=95)advice="Thunderstorm conditions reported. Avoid riding outdoors and seek safe shelter.";
+  else if(c.precipitation>0||[61,63,65,80,81,82].includes(c.weather_code))advice="Wet conditions may reduce tire grip and braking performance. Slow down or postpone your ride.";
+  else if(c.wind_speed_10m>=30)advice="Strong winds may affect balance. Consider postponing your ride.";
+  else if(c.temperature_2m>=35)advice="Hot weather: hydrate, seek shade, and consider riding at a cooler time.";
+  else if(c.temperature_2m<=5)advice="Cold conditions: wear suitable layers and check road conditions.";
+  else advice="Conditions may be suitable for cycling. Continue to monitor weather and traffic.";
+  document.getElementById("weatherAdvice").textContent=advice;
+}
+function statHTML(value,label){
+  return "<div class='stat'><div class='stat-value'>"+escapeHTML(String(value))+
+    "</div><div class='stat-label'>"+escapeHTML(label)+"</div></div>";
+}
+
+/* ---------------- RIDE TRACKER ---------------- */
+let ride={
+  active:false,paused:false,startTime:0,elapsedBeforePause:0,
+  distance:0,lastPoint:null,currentSpeed:0,watchLastTimestamp:0
+};
+let rideTimer=null;
+function startRide(){
+  if(!currentLocation){
+    alert("Waiting for GPS. Allow location access before starting a ride.");return;
+  }
+  if(ride.active)return;
+  ride.active=true;ride.paused=false;
+  ride.startTime=Date.now();
+  ride.elapsedBeforePause=0;
+  ride.distance=0;
+  ride.lastPoint={lat:currentLocation.lat,lon:currentLocation.lon,timestamp:currentLocation.timestamp};
+  ride.currentSpeed=0;
+  document.getElementById("rideState").textContent="Ride in progress. Ride safely!";
+  document.getElementById("startRideBtn").disabled=true;
+  document.getElementById("pauseRideBtn").disabled=false;
+  document.getElementById("pauseRideBtn").textContent="Ⅱ Pause";
+  if(rideTimer)clearInterval(rideTimer);
+  rideTimer=setInterval(updateRideDisplay,1000);
+  updateRideDisplay();
+}
+function togglePauseRide(){
+  if(!ride.active)return;
+  if(!ride.paused){
+    ride.elapsedBeforePause+=Date.now()-ride.startTime;
+    ride.paused=true;
+    ride.lastPoint=null;
+    document.getElementById("pauseRideBtn").textContent="▶ Resume";
+    document.getElementById("rideState").textContent="Ride paused.";
+  }else{
+    ride.paused=false;
+    ride.startTime=Date.now();
+    ride.lastPoint=currentLocation?{
+      lat:currentLocation.lat,lon:currentLocation.lon,timestamp:currentLocation.timestamp
+    }:null;
+    document.getElementById("pauseRideBtn").textContent="Ⅱ Pause";
+    document.getElementById("rideState").textContent="Ride resumed.";
+  }
+  updateRideDisplay();
+}
+function processRideGPS(position){
+  if(!ride.active||ride.paused)return;
+  const c=position.coords;
+  if(ride.lastPoint){
+    const delta=haversine(ride.lastPoint.lat,ride.lastPoint.lon,c.latitude,c.longitude);
+    const elapsed=(position.timestamp-ride.lastPoint.timestamp)/1000;
+    const accuracy=c.accuracy||0;
+    // Filter small GPS jitter and implausible jumps.
+    if(delta>0.005&&accuracy<80&&elapsed>0&&delta/elapsed*3600<120){
+      ride.distance+=delta;
+    }
+  }
+  ride.lastPoint={
+    lat:c.latitude,lon:c.longitude,timestamp:position.timestamp
+  };
+  if(c.speed!==null&&Number.isFinite(c.speed)){
+    ride.currentSpeed=Math.max(0,c.speed*3.6);
+  }
+}
+function getRideElapsed(){
+  if(!ride.active)return 0;
+  return ride.elapsedBeforePause+(ride.paused?0:Date.now()-ride.startTime);
+}
+function updateRideDisplay(){
+  const elapsed=getRideElapsed();
+  const sec=Math.floor(elapsed/1000);
+  const time=String(Math.floor(sec/60)).padStart(2,"0")+":"+
+    String(sec%60).padStart(2,"0");
+  const average=elapsed>0?ride.distance/(elapsed/3600000):0;
+  document.getElementById("rideDistance").textContent=formatDistance(ride.distance);
+  document.getElementById("rideDuration").textContent=time;
+  document.getElementById("rideSpeed").textContent=ride.currentSpeed.toFixed(1)+" km/h";
+  document.getElementById("rideAverage").textContent=average.toFixed(1)+" km/h";
+  document.getElementById("homeDistance").textContent=formatDistance(ride.distance);
+  document.getElementById("homeSpeed").textContent=ride.currentSpeed.toFixed(1)+" km/h";
+}
+function finishRide(){
+  if(!ride.active){alert("Start a ride first.");return}
+  if(!confirm("Finish and save this ride?"))return;
+  const elapsed=getRideElapsed();
+  const record={
+    id:Date.now(),date:new Date().toISOString(),
+    distance:ride.distance,duration:Math.floor(elapsed/1000),
+    average:elapsed>0?ride.distance/(elapsed/3600000):0
+  };
+  if(rideTimer){clearInterval(rideTimer);rideTimer=null}
+  if(record.distance>0||record.duration>0){
+    historyData.unshift(record);
+    writeStore(STORE.history,historyData);
+  }
+  ride.active=false;ride.paused=false;ride.lastPoint=null;
+  ride.startTime=0;ride.elapsedBeforePause=0;
+  ride.distance=0;ride.currentSpeed=0;
+  document.getElementById("startRideBtn").disabled=false;
+  document.getElementById("pauseRideBtn").disabled=true;
+  document.getElementById("pauseRideBtn").textContent="Ⅱ Pause";
+  document.getElementById("rideState").textContent=
+    "Ride saved: "+formatDistance(record.distance)+" · "+formatDuration(record.duration);
+  updateRideDisplay();
+  renderHistory();
+  document.getElementById("homeRides").textContent=historyData.length;
+  alert("Ride saved!\nDistance: "+formatDistance(record.distance)+
+    "\nTime: "+formatDuration(record.duration));
+}
+
+/* ---------------- HISTORY + BADGES ---------------- */
+function formatDuration(seconds){
+  const h=Math.floor(seconds/3600);
+  const m=Math.floor((seconds%3600)/60);
+  const s=seconds%60;
+  return h>0?h+"h "+m+"m":m+"m "+s+"s";
+}
+function renderHistory(){
+  const list=document.getElementById("historyList");
+  document.getElementById("homeRides").textContent=historyData.length;
+  const total=historyData.reduce((sum,r)=>sum+(r.distance||0),0);
+  document.getElementById("historySummary").textContent=
+    historyData.length+" completed rides · Total "+formatDistance(total);
+  if(!historyData.length){
+    list.innerHTML="<p class='muted'>No completed rides yet. Your saved rides will appear here.</p>";
+    return;
+  }
+  list.innerHTML=historyData.map(r=>
+    "<div class='item'><div class='item-title'>🚴 "+formatDistance(r.distance||0)+
+    "</div><div class='muted'>"+new Date(r.date).toLocaleString()+
+    "<br>Duration: "+formatDuration(r.duration||0)+
+    " · Average speed: "+Number(r.average||0).toFixed(1)+" km/h</div></div>"
+  ).join("");
+}
+function clearHistory(){
+  if(!confirm("Delete all saved ride history?"))return;
+  historyData=[];writeStore(STORE.history,historyData);
+  renderHistory();renderBadges();
+}
+function renderBadges(){
+  const total=historyData.reduce((s,r)=>s+(r.distance||0),0);
+  const badges=[
+    ["🚲 First Ride",historyData.length>=1,"Complete your first ride"],
+    ["🟢 5 Rides",historyData.length>=5,"Complete 5 rides"],
+    ["🏅 10 Rides",historyData.length>=10,"Complete 10 rides"],
+    ["📏 10 KM",total>=10,"Ride a total of 10 km"],
+    ["🌟 50 KM",total>=50,"Ride a total of 50 km"],
+    ["🔥 100 KM",total>=100,"Ride a total of 100 km"]
+  ];
+  document.getElementById("badgeList").innerHTML=badges.map(b=>
+    "<div class='item'><span class='badge' style='opacity:"+(b[1]?"1":".45")+"'>"+
+    b[0]+"</span><div class='muted' style='margin-top:6px'>"+b[2]+
+    (b[1]?" · Unlocked":" · Locked")+"</div></div>"
+  ).join("");
+}
+
+/* ---------------- NEARBY SHOPS ---------------- */
+async function findNearbyShops(){
+  const out=document.getElementById("nearbyList");
+  if(!currentLocation){out.textContent="Waiting for GPS location.";return}
+  out.textContent="Searching for nearby bicycle shops…";
+  const query='[out:json];(node["shop"="bicycle"](around:10000,'+
+    currentLocation.lat+','+currentLocation.lon+');way["shop"="bicycle"](around:10000,'+
+    currentLocation.lat+','+currentLocation.lon+'););out center tags;';
+  try{
+    const res=await fetch("https://overpass-api.de/api/interpreter",{
+      method:"POST",body:"data="+encodeURIComponent(query)
+    });
+    if(!res.ok)throw new Error("Search failed");
+    const data=await res.json();
+    if(!data.elements.length){out.textContent="No bicycle shops found in the 10 km search area.";return}
+    out.innerHTML=data.elements.slice(0,25).map(el=>{
+      const tags=el.tags||{};
+      const name=tags.name||"Bicycle Shop";
+      const lat=el.lat??el.center?.lat;
+      const lon=el.lon??el.center?.lon;
+      return "<div class='item'><div class='item-title'>🛠️ "+escapeHTML(name)+
+        "</div><div class='muted'>"+escapeHTML([tags["addr:street"],tags["addr:city"]].filter(Boolean).join(", ")||"Address not listed")+
+        "</div><a target='_blank' rel='noopener' href='https://www.openstreetmap.org/?mlat="+lat+"&mlon="+lon+"#map=17/"+lat+"/"+lon+"'>View on map</a></div>";
+    }).join("");
+  }catch(e){out.textContent="Nearby search failed. Please try again later."}
+}
+
+/* ---------------- SAFETY CHECKLIST ---------------- */
+const safetyItems=[
+  ["tires","Tires have no visible cracks, cuts, or bulges."],
+  ["pressure","Tire pressure is suitable for my bicycle."],
+  ["wheels","Wheels spin freely and are securely attached."],
+  ["brakes","Front and rear brakes work properly."],
+  ["pads","Brake pads are not excessively worn."],
+  ["chain","Chain is clean enough and properly engaged."],
+  ["gears","Gears shift correctly."],
+  ["pedals","Pedals and cranks are secure."],
+  ["frame","Frame and handlebars show no visible damage."],
+  ["helmet","Helmet is fitted and fastened properly."],
+  ["lights","Lights and reflectors work when needed."],
+  ["phone","Phone is secured and battery is sufficient."],
+  ["water","Water and essential items are ready."],
+  ["route","Route and weather conditions have been checked."]
+];
+function renderSafety(){
+  const list=document.getElementById("safetyList");
+  list.innerHTML=safetyItems.map(item=>
+    "<label class='checkrow'><input type='checkbox' data-safety='"+item[0]+"' "+
+    (safetyState[item[0]]?"checked":"")+"><span>"+item[1]+"</span></label>"
+  ).join("");
+  list.querySelectorAll("input").forEach(input=>{
+    input.addEventListener("change",()=>{
+      safetyState[input.dataset.safety]=input.checked;
+      writeStore(STORE.safety,safetyState);
+      updateSafetyCount();
+    });
+  });
+  updateSafetyCount();
+}
+function updateSafetyCount(){
+  const checked=safetyItems.filter(i=>safetyState[i[0]]).length;
+  const pct=Math.round(checked/safetyItems.length*100);
+  document.getElementById("safetyCount").textContent=checked+"/"+safetyItems.length;
+  document.getElementById("safetyPercent").textContent=pct+"%";
+  document.getElementById("homeChecklist").textContent=
+    checked+" of "+safetyItems.length+" checks completed ("+pct+"%).";
+}
+function resetSafety(){
+  if(!confirm("Reset all safety checklist items?"))return;
+  safetyState={};writeStore(STORE.safety,safetyState);renderSafety();
+}
+
+/* ---------------- EMERGENCY CONTACTS ---------------- */
+function addContact(){
+  const name=document.getElementById("contactName").value.trim();
+  const phone=document.getElementById("contactPhone").value.trim();
+  if(!name||!phone){alert("Enter both a name and phone number.");return}
+  contacts.push({id:Date.now(),name,phone,locked:true});
+  writeStore(STORE.contacts,contacts);
+  document.getElementById("contactName").value="";
+  document.getElementById("contactPhone").value="";
+  renderContacts();
+}
+function renderContacts(){
+  const out=document.getElementById("contactsList");
+  if(!contacts.length){
+    out.innerHTML="<p class='muted'>No contacts saved yet.</p>";return;
+  }
+  out.innerHTML=contacts.map(c=>
+    "<div class='item'><div class='item-title'>👤 "+escapeHTML(c.name)+"</div>"+
+    "<div class='muted'>"+(c.locked?"🔒 ••••••••":escapeHTML(c.phone))+"</div>"+
+    "<div class='contact-actions'>"+
+    "<a class='btn' style='text-align:center;text-decoration:none' href='tel:"+escapeHTML(c.phone.replace(/[^\d+*#]/g,""))+"'>📞 Call</a>"+
+    "<button class='btn secondary' onclick='editContact("+c.id+")'>✏️ Edit</button>"+
+    "<button class='btn danger' onclick='deleteContact("+c.id+")'>🗑️ Delete</button>"+
+    "</div></div>"
+  ).join("");
+}
+function editContact(id){
+  const c=contacts.find(x=>x.id===id);
+  if(!c)return;
+  const name=prompt("Edit contact name:",c.name);
+  if(name===null)return;
+  const phone=prompt("Edit phone number:",c.phone);
+  if(phone===null)return;
+  if(!name.trim()||!phone.trim()){alert("Name and phone number cannot be empty.");return}
+  c.name=name.trim();c.phone=phone.trim();c.locked=true;
+  writeStore(STORE.contacts,contacts);renderContacts();
+}
+function deleteContact(id){
+  if(!confirm("Delete this saved contact?"))return;
+  contacts=contacts.filter(c=>c.id!==id);
+  writeStore(STORE.contacts,contacts);renderContacts();
+}
+
+/* ---------------- SETTINGS + FEEDBACK ---------------- */
+function loadSettings(){
+  document.getElementById("unitSetting").value=settings.unit||"km";
+  document.getElementById("speedSetting").value=settings.speed||15;
+}
+function saveSettings(){
+  settings.unit=document.getElementById("unitSetting").value;
+  settings.speed=Math.max(5,Math.min(60,Number(document.getElementById("speedSetting").value)||15));
+  writeStore(STORE.settings,settings);
+  updateRideDisplay();renderHistory();
+  alert("Settings saved.");
+}
+function sendFeedback(){
+  const name=document.getElementById("feedbackName").value.trim()||"Not provided";
+  const message=document.getElementById("feedbackMessage").value.trim();
+  if(!message){alert("Please write your feedback first.");return}
+  const subject=encodeURIComponent("Alix Cycle World V6 Feedback");
+  const body=encodeURIComponent("Name: "+name+"\n\nFeedback:\n"+message+
+    "\n\nApp: Alix Cycle World V6");
+  location.href="mailto:basalomanolito228@gmail.com?subject="+subject+"&body="+body;
+}
+
+/* ---------------- UTILITIES ---------------- */
+function escapeHTML(value){
+  return String(value).replace(/[&<>"']/g,ch=>({
+    "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"
+  }[ch]));
+}
+
+/* ---------------- STARTUP ---------------- */
+loadSettings();
+renderSafety();
+renderContacts();
+renderHistory();
+renderBadges();
+updateRideDisplay();
+startAutomaticLocation();
+
+document.addEventListener("visibilitychange",()=>{
+  if(!document.hidden&&currentLocation){
+    updateCyclistOnMap();
+    if(Date.now()-lastWeatherFetch>15*60*1000){
+      loadWeather(currentLocation.lat,currentLocation.lon);
+    }
+  }
+});
+</script>
+</body>
+</html>
